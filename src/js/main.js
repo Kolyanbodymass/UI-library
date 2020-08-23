@@ -1,3 +1,7 @@
-import './lib/lib';
+import $ from './lib/lib';
 
-$('div').hide().show();
+$('button').on('click', function() {
+    $(this).toggleClass('active');
+});
+
+$('.active').setAttribute('id', 'active').removeAttribute('id');
