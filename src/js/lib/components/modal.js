@@ -1,77 +1,85 @@
 import $ from '../core';
 
-$.prototype.modal = function() {
-
-    function calcScroll() {
-        let div = document.createElement('div');
-
-        div.style.width = '50px';
-        div.style.height = '50px';
-        div.style.overflowY = 'scroll';
-        div.style.visibility = 'hidden';
-
-        document.body.appendChild(div);
-        let scrollWidth = div.offsetWidth - div.clientWidth;
-        div.remove();
-
-        return scrollWidth;
-    }
-
-    const scroll = calcScroll();    
-
+$.prototype.modal = function(created) {
     for (let i = 0; i < this.length; i++) {
         const target = this[i].getAttribute('data-target');
         $(this[i]).click((e) => {
             e.preventDefault();
             $(target).fadeIn(500);
+            document.body.style.overflow = 'hidden';
+        });
 
-            let scrollHeight = Math.max(
-                    document.body.scrollHeight, document.documentElement.scrollHeight,
-                    document.body.offsetHeight, document.documentElement.offsetHeight,
-                    document.body.clientHeight, document.documentElement.clientHeight
-                );
-
-            if (scrollHeight > document.documentElement.clientHeight) {
-                const targetChildren = document.querySelector(target).firstChild;
-                const mr = getComputedStyle(targetChildren).marginRight;
-                const finishMr = +(mr.substring(0, mr.length - 2)) + scroll;
-                targetChildren.style.marginRight = `${finishMr}px`;
-                document.body.style.overflow = 'hidden';
-                document.body.style.marginRight = `${scroll}px`;
+        const closeElements = document.querySelectorAll(`${target} [data-close]`);
+        closeElements.forEach(elem => {
+            $(elem).click(() => {
+                $(target).fadeOut(500);
+                document.body.style.overflow = '';
+                if (created) {
+                    document.querySelector(target).remove();
+                }
+            });
+        });
+    
+        $(target).click(e => {
+            if (e.target.classList.contains('modal')) {
+                $(target).fadeOut(500);
+                document.body.style.overflow = '';
+                if (created) {
+                    document.querySelector(target).remove();
+                }
             }
         });
     }
-
-    const defaultMarginRight = () => {
-        for (let i = 0; i < this.length; i++) {
-            const target = this[i].getAttribute('data-target');
-            const targetChildren = document.querySelector(target).firstChild;
-            
-            if (targetChildren.style.marginRight) {
-                const mr = getComputedStyle(targetChildren).marginRight;
-                const finishMr = +(mr.substring(0, mr.length - 2)) - scroll;
-                targetChildren.style.marginRight = `${finishMr}px`;
-            }
-        }                    
-        document.body.style.marginRight = `0px`;
-        document.body.style.overflow = '';
-    }
-
-    const closeElements = document.querySelectorAll('[data-close]');
-    closeElements.forEach(elem => {
-        $(elem).click(() => {
-            $('.modal').fadeOut(500);
-            defaultMarginRight();            
-        });
-    });
-
-    $('.modal').click(e => {
-        if (e.target.classList.contains('modal')) {
-            $('.modal').fadeOut(500);
-            defaultMarginRight();            
-        }
-    });
-
 };
 
 $('[data-toggle="modal"]').modal();
+
+$.prototype.createModal = function({text, btns} = {}) {
+    for (let i = 0; i< this.length; i++) {
+        let modal = document.createElement('div');
+        modal.classList.add('modal');
+        modal.setAttribute('id', this[i].getAttribute('data-target').slice(1));
+
+        // btns = {count: num, settings: [[text, classNames=[], close, cb]]}
+        const buttons = [];
+        for (let j = 0;j < btns.count; j++){
+            let btn = document.createElement('button');
+            btn.classList.add('btn', ...btns.settings[j][1]);
+            btn.textContent = btns.settings[j][0];
+            if (btns.settings[j][2]) {
+                btn.setAttribute('data-close', 'true');
+            }
+            if (btns.settings[j][3] && typeof(btns.settings[j][3]) === 'function') {
+                btn.addEventListener('click', btns.settings[j][3]);
+            }
+
+            buttons.push(btn);
+        }
+
+        modal.innerHTML = `
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <button class="close" data-close>
+                    <span>&times;</span>
+                </button>
+                <div class="modal-header">
+                    <div class="modal-title">
+                        ${text.title}
+                    </div>
+                </div>
+                <div class="modal-body">
+                    ${text.body}
+                </div>
+                <div class="modal-footer">
+                    
+                </div>
+            </div>
+        </div>
+        `;
+
+        modal.querySelector(".modal-footer").append(...buttons);
+        document.body.appendChild(modal);
+        $(this[i]).modal(true);
+        $(this[i].getAttribute('data-target')).fadeIn(500);
+    }
+};
