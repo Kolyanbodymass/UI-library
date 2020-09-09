@@ -68,3 +68,19 @@ $.prototype.carousel = function() {
 };
 
 $('.carousel').carousel();
+
+// $.prototype.createCarousel = function() {
+//     for (let i = 0; i < this.length; i++) {
+//         const ol = document.createElement('ol');
+//         ol.classList.add('carousel-indicators');
+//         const amountDiv = document.querySelector('.carousel').children().length;
+
+//         for (let j = 0; j < amountDiv; j++) {
+//             const li = document.createElement('li');
+//             li.setAttribute('data-slide-to', j);
+//             ol.appendChild(li);
+//         }
+            
+        
+//     }
+// }
